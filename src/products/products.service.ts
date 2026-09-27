@@ -3,6 +3,7 @@ import { Pool } from 'pg';
 import { DATABASE_CONNECTION } from '../db/database.module';
 import type { Database } from '../db/database.module';
 import { products } from '../db/schema';
+import { eq } from 'drizzle-orm';
 
 @Injectable()
 export class ProductsService {
@@ -15,5 +16,9 @@ export class ProductsService {
     
     findAllProducts() {
         return this.db.select().from(products);
+    }
+
+    findOneProducts(id: number) {
+        return this.db.select().from(products).where(eq(products.id, id));
     }
 }

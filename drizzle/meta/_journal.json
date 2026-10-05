@@ -15,6 +15,13 @@
       "when": 1790890296427,
       "tag": "0001_mysterious_squirrel_girl",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791149555800,
+      "tag": "0002_medical_terror",
+      "breakpoints": true
     }
   ]
 }

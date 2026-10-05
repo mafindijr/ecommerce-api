@@ -3,8 +3,8 @@ import { ConfigModule } from '@nestjs/config';
 import { createObserveModule } from '@nestjs/observe';
 import { DatabaseModule } from './db/database.module';
 import { ProductsModule } from './products/products.module';
-import { UsersService } from './users/users.service';
-import { UsersController } from './users/users.controller';
+// import { UsersService } from './users/users.service';
+// import { UsersController } from './users/users.controller';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 
@@ -33,8 +33,8 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
   AuthModule,
 ],
-  providers: [UsersService],
-  controllers: [UsersController],
+//   providers: [UsersService],
+//   controllers: [UsersController],
   
 })
 export class AppModule {}

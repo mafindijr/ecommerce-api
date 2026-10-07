@@ -8,21 +8,30 @@ import {
     ParseIntPipe, 
     Body
 } from '@nestjs/common';
+import { UseGuards } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../common/gurads/roles.guard';
+import { Roles } from '../common/decorators/roles.decorators';
+
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 
+
 @Controller('products')
 export class ProductsController {
+
     constructor(
         private readonly productsService: ProductsService,
     ) {}
-    
+
     @Post()
-    async createProduct(@Body() createProductDto: CreateProductDto) {
+    @Roles('ADMIN')
+    @UseGuards(JwtAuthGuard, RolesGuard) // now only authenticated user with admin role can create a product
+    async createProduct(@Body() dto: CreateProductDto) {
         return this.productsService.createProduct(
-            createProductDto.name,
-            createProductDto.price,
+            dto.name,
+            dto.price,
         );
     }
 

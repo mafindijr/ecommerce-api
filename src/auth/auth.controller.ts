@@ -19,6 +19,4 @@ export class AuthController {
     return this.authService.login(dto); 
   }
 
-  @Get('users')
-  findAll
 }

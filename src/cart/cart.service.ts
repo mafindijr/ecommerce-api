@@ -1,8 +1,9 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { DATABASE_CONNECTION } from '../db/database.module';
 import type { Database } from '../db/database.module';
 import { eq } from 'drizzle-orm';
-import { carts } from '../db/schema';
+import { carts, cartItems, products } from '../db/schema';
+import { AddCartItemDto } from './dto/add-cart-item.dto';
 
 @Injectable()
 export class CartService {
@@ -27,5 +28,38 @@ export class CartService {
                     .returning();
 
         return newCart;
+    }
+
+    async addItem(userId: number, dto: AddCartItemDto) {
+
+        //find or create the authenticated user's cart
+        const cart = await this.getOrCreateCart(userId); // we need to wait for the cart to return
+         
+
+        // check whether products exists
+
+         const [product] = await this.db
+                    .select()
+                    .from(products)
+                    .where(eq(products.id, dto.productId));
+        
+        if(!product) {
+            throw new NotFoundException('Product not found');
+        }
+
+        // Insert the item into the cart
+
+        const [addToCart] = await this.db
+            .insert(cartItems)
+            .values({
+                cartId: cart.id,
+                productId: dto.productId,
+                quantity: dto.quantity,
+            })
+            .returning();
+
+        // return the created cart item
+
+        return addToCart;
     }
 }

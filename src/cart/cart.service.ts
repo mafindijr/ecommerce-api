@@ -2,7 +2,7 @@ import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { DATABASE_CONNECTION } from '../db/database.module';
 import type { Database } from '../db/database.module';
 import { eq } from 'drizzle-orm';
-import { carts, cartItems, products } from '../db/schema';
+import { carts, cartItems, products,} from '../db/schema';
 import { AddCartItemDto } from './dto/add-cart-item.dto';
 
 @Injectable()
@@ -61,5 +61,50 @@ export class CartService {
         // return the created cart item
 
         return addToCart;
+    }
+
+    async getCart(userId: number) {
+
+        // finding user's cart using my method
+        const cart = await this.getOrCreateCart(userId);
+
+        // retrieve cart items and their products details using innerJoin
+
+        const items = await this.db
+            .select({
+                id: cartItems.id,
+                productId: cartItems.productId,
+                name: products.name,
+                price: products.price,
+                quantity: cartItems.quantity,
+            })
+            .from(cartItems)
+            .innerJoin(
+                products,
+                eq(cartItems.productId, products.id),
+            )
+            .where(eq(cartItems.cartId, cart.id));
+
+            // calculate each items sub total
+
+            const itemsWithSubtotal = items.map((item) => ({
+                ...item,
+                subtotal: item.price * item.quantity,
+            }));
+
+            // calculate cart total
+            const total = itemsWithSubtotal.reduce(
+                (sum, item) => sum + item.subtotal,
+                0,
+            );
+
+            // return the cart 
+
+            return {
+                cartId: cart.id,
+                items: itemsWithSubtotal,
+                total,
+            }; 
+
     }
 }

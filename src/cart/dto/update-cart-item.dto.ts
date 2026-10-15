@@ -1,8 +1,4 @@
-import {
-    IsInt,
-    IsPositive,
-    Min
-} from 'class-validator';
+import { IsInt, Min } from 'class-validator';
 
 
 export class UpdateCartItemDto {

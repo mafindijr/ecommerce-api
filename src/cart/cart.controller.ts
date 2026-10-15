@@ -1,7 +1,8 @@
-import { Get, Post, Body, Controller, UseGuards, Req,  } from '@nestjs/common';
+import { Get, Post, Patch, Body, Param, Controller, UseGuards, Req, ParseIntPipe,  } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { CartService } from './cart.service';
 import { AddCartItemDto } from './dto/add-cart-item.dto';
+import { UpdateCartItemDto } from './dto/update-cart-item.dto';
 
 @Controller('cart')
 export class CartController {
@@ -17,6 +18,18 @@ export class CartController {
         const userId = req.user.userId;
 
          return this.cartService.addItem(userId, dto);
+    }
+
+    @Patch('items/:id')
+    @UseGuards(JwtAuthGuard)
+    updateItem(
+        @Req() req: any,
+        @Param('id', ParseIntPipe) id: number,
+        @Body() dto: UpdateCartItemDto,
+    ) {
+        const userId = req.user.userId;
+
+        return this.cartService.updateItem(userId, id, dto);
     }
 
     @Get()

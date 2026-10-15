@@ -1,9 +1,10 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { DATABASE_CONNECTION } from '../db/database.module';
 import type { Database } from '../db/database.module';
-import { eq } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { carts, cartItems, products,} from '../db/schema';
 import { AddCartItemDto } from './dto/add-cart-item.dto';
+import { UpdateCartItemDto } from './dto/update-cart-item.dto';
 
 @Injectable()
 export class CartService {
@@ -106,5 +107,38 @@ export class CartService {
                 total,
             }; 
 
+    }
+
+    async updateItem(
+        userId: number,
+        itemId: number,
+        dto: UpdateCartItemDto
+    ) {
+        // finding auth user
+
+        const cart = await this.getOrCreateCart(userId);
+
+        // updating only an item belonging to that cart
+
+        const [updateditem] = await this.db
+            .update(cartItems)
+            .set({
+                quantity: dto.quantity
+            })
+            .where(
+                and (
+                        eq(cartItems.id, itemId),
+                        eq(cartItems.cartId, cart.id)
+                    )
+            )
+            .returning();
+
+            // if no items was updated, it doesnt belong to this cart
+            
+            if (!updateditem) {
+                throw new NotFoundException('Cart item not found');
+            }
+
+        return updateditem;
     }
 }

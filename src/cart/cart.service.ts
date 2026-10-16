@@ -120,7 +120,7 @@ export class CartService {
 
         // updating only an item belonging to that cart
 
-        const [updateditem] = await this.db
+        const [updatedItem] = await this.db
             .update(cartItems)
             .set({
                 quantity: dto.quantity
@@ -134,11 +134,41 @@ export class CartService {
             .returning();
 
             // if no items was updated, it doesnt belong to this cart
-            
-            if (!updateditem) {
+
+            if (!updatedItem) {
                 throw new NotFoundException('Cart item not found');
             }
 
-        return updateditem;
+        return updatedItem;
+    }
+
+    async removeItem (userId: number, itemId: number) {
+
+        //find auth user's cart
+
+        const cart = await this.getOrCreateCart(userId);
+
+        // delete only an item belonging to the cart
+
+        const [deleteItem] = await this.db
+            .delete(cartItems)
+            .where(
+                and (
+                    eq(cartItems.id, itemId),
+                    eq(cartItems.cartId, cart.id)
+                ),
+            )
+            .returning();
+
+            // handle missing items
+           
+            if (!deleteItem) {
+                throw new NotFoundException('Cart item not found');
+            }
+
+            return {
+                message: 'Cart item removed successfully',
+                deleteItem,
+            };
     }
 }

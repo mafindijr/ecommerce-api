@@ -1,6 +1,7 @@
 import {
     integer,
     pgTable,
+    unique,
 } from 'drizzle-orm/pg-core';
 import { carts } from './cart.schema';
 import { products } from './products.schema';
@@ -19,4 +20,11 @@ export const cartItems = pgTable('cart_items', {
         .references(() => products.id),
 
     quantity: integer().notNull(),
-});
+},
+(table) => [
+    unique('cart_items_cart_product_unique').on(
+        table.cartId,
+        table.productId,
+    ),
+]
+);

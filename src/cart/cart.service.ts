@@ -8,6 +8,7 @@ import { UpdateCartItemDto } from './dto/update-cart-item.dto';
 
 @Injectable()
 export class CartService {
+
     constructor(
             @Inject(DATABASE_CONNECTION)
             private readonly db: Database
@@ -48,9 +49,35 @@ export class CartService {
             throw new NotFoundException('Product not found');
         }
 
-        // Insert the item into the cart
+        // checking whether product is already in the cart
 
-        const [addToCart] = await this.db
+        const [existingItem] = await this.db
+            .select()
+            .from(cartItems)
+            .where(
+                and(
+                    eq(cartItems.cartId, cart.id),
+                    eq(cartItems.productId, dto.productId),
+                ),
+            );
+
+        // if it exists, increase the quantity
+
+        if (existingItem) {
+            const [updatedItem] = await this.db
+                .update(cartItems)
+                .set({
+                    quantity: existingItem.quantity + dto.quantity,
+                })
+                .where(eq(cartItems.id, existingItem.id))
+                .returning();
+
+                return updatedItem;
+        }
+
+        // otherwise, Insert the new item into the cart
+
+        const [newItem] = await this.db
             .insert(cartItems)
             .values({
                 cartId: cart.id,
@@ -61,7 +88,7 @@ export class CartService {
 
         // return the created cart item
 
-        return addToCart;
+        return newItem;
     }
 
     async getCart(userId: number) {

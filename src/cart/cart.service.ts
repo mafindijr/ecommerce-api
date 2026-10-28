@@ -57,7 +57,7 @@ export class CartService {
             .where(
                 and(
                     eq(cartItems.cartId, cart.id),
-                    eq(cartItems.productId, dto.productId),
+                    eq(cartItems.variantId, dto.productId),
                 ),
             );
 
@@ -81,7 +81,7 @@ export class CartService {
             .insert(cartItems)
             .values({
                 cartId: cart.id,
-                productId: dto.productId,
+                variantId: dto.productId,
                 quantity: dto.quantity,
             })
             .returning();
@@ -101,7 +101,7 @@ export class CartService {
         const items = await this.db
             .select({
                 id: cartItems.id,
-                productId: cartItems.productId,
+                variantId: cartItems.variantId,
                 name: products.name,
                 price: products.price,
                 quantity: cartItems.quantity,
@@ -109,7 +109,7 @@ export class CartService {
             .from(cartItems)
             .innerJoin(
                 products,
-                eq(cartItems.productId, products.id),
+                eq(cartItems.variantId, products.id),
             )
             .where(eq(cartItems.cartId, cart.id));
 

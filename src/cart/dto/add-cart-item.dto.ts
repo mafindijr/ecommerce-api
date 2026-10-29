@@ -7,7 +7,7 @@ import {
 export class AddCartItemDto {
     @IsInt()
     @IsPositive()
-    productId: number;
+    variantId: number;
 
     @IsInt()
     @Min(1)

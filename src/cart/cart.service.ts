@@ -43,7 +43,7 @@ export class CartService {
          const [product] = await this.db
                     .select()
                     .from(products)
-                    .where(eq(products.id, dto.productId));
+                    .where(eq(products.id, dto.variantId));
         
         if(!product) {
             throw new NotFoundException('Product not found');
@@ -57,7 +57,7 @@ export class CartService {
             .where(
                 and(
                     eq(cartItems.cartId, cart.id),
-                    eq(cartItems.variantId, dto.productId),
+                    eq(cartItems.variantId, dto.variantId),
                 ),
             );
 
@@ -81,7 +81,7 @@ export class CartService {
             .insert(cartItems)
             .values({
                 cartId: cart.id,
-                variantId: dto.productId,
+                variantId: dto.variantId,
                 quantity: dto.quantity,
             })
             .returning();

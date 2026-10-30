@@ -2,7 +2,7 @@ import { Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { DATABASE_CONNECTION } from '../db/database.module';
 import type { Database } from '../db/database.module';
 import { and, eq } from 'drizzle-orm';
-import { carts, cartItems, products,} from '../db/schema';
+import { carts, cartItems, products, productVariants} from '../db/schema';
 import { AddCartItemDto } from './dto/add-cart-item.dto';
 import { UpdateCartItemDto } from './dto/update-cart-item.dto';
 
@@ -38,15 +38,25 @@ export class CartService {
         const cart = await this.getOrCreateCart(userId); // we need to wait for the cart to return
          
 
-        // check whether products exists
+        // // check whether products exists
 
-         const [product] = await this.db
-                    .select()
-                    .from(products)
-                    .where(eq(products.id, dto.variantId));
+        //  const [product] = await this.db
+        //             .select()
+        //             .from(products)
+        //             .where(eq(products.id, dto.variantId));
         
-        if(!product) {
-            throw new NotFoundException('Product not found');
+        // if(!product) {
+        //     throw new NotFoundException('Product not found');
+        // }
+
+        // check whether products varianr exists
+        const [variant] = await this.db
+            .select()
+            .from(productVariants)
+            .where(eq(productVariants.id, dto.variantId));
+
+        if(!variant) {
+            throw new NotFoundException('Product variant not found');
         }
 
         // checking whether product is already in the cart
@@ -96,20 +106,28 @@ export class CartService {
         // finding user's cart using my method
         const cart = await this.getOrCreateCart(userId);
 
-        // retrieve cart items and their products details using innerJoin
+        // retrieve cart items and their products and variants details using innerJoin
 
         const items = await this.db
             .select({
                 id: cartItems.id,
-                variantId: cartItems.variantId,
+                varientId: productVariants.id,
+                productId: products.id,
                 name: products.name,
+                color: productVariants.color,
+                size: productVariants.size,
+                sku: productVariants.sku,
                 price: products.price,
                 quantity: cartItems.quantity,
             })
             .from(cartItems)
             .innerJoin(
+                productVariants,
+                eq(cartItems.variantId, productVariants.id),
+            )
+            .innerJoin(
                 products,
-                eq(cartItems.variantId, products.id),
+                eq(productVariants.id, products.id)
             )
             .where(eq(cartItems.cartId, cart.id));
 

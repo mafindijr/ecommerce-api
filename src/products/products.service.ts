@@ -1,10 +1,10 @@
 import { Inject, Injectable, NotFoundException } from '@nestjs/common';
-// import { Pool } from 'pg';
-import { DATABASE_CONNECTION } from '../db/database.module';
-import type { Database } from '../db/database.module';
-import { products } from '../db/schema';
 import { eq } from 'drizzle-orm';
+import type { Database } from '../db/database.module';
+import { products, productVariants } from '../db/schema';
+import { DATABASE_CONNECTION } from '../db/database.module';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { CreateProductVariantDto } from './dto/create-product-variant.dto';
 
 @Injectable()
 export class ProductsService {
@@ -24,6 +24,36 @@ export class ProductsService {
             })
             .returning();
     }
+
+    
+    async createProductVariant(
+        productId: number,
+        dto: CreateProductVariantDto,
+    ) {
+        // Check whether the parent product exists
+        const [product] = await this.db
+            .select()
+            .from(products)
+            .where(eq(products.id, productId));
+
+        if (!product) {
+            throw new NotFoundException('Product not found');
+        }
+
+        // Create the product variant
+        const [variant] = await this.db
+            .insert(productVariants)
+            .values({
+                productId,
+                color: dto.color ?? null,
+                size: dto.size ?? null,
+                sku: dto.sku,
+            })
+            .returning();
+
+        return variant;
+    }
+
 
     async findAllProducts() {
         return await this.db.select().from(products);

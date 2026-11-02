@@ -55,6 +55,29 @@ export class ProductsService {
     }
 
 
+    
+    async findProductVariants(productId: number) {
+        // First, check whether the product exists
+        const [product] = await this.db
+            .select()
+            .from(products)
+            .where(eq(products.id, productId));
+
+        if (!product) {
+            throw new NotFoundException('Product not found');
+        }
+
+        // Retrieve all variants belonging to this product
+        const variants = await this.db
+            .select()
+            .from(productVariants)
+            .where(eq(productVariants.productId, productId));
+
+        return variants;
+    }
+
+
+
     async findAllProducts() {
         return await this.db.select().from(products);
     }

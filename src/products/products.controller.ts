@@ -50,6 +50,15 @@ export class ProductsController {
         );
     }
 
+    
+    @Get(':id/variants')
+    async findProductVariants(
+        @Param('id', ParseIntPipe) id: number,
+    ) {
+        return this.productsService.findProductVariants(id);
+    }
+
+
 
     @Get()
     async findAll() {

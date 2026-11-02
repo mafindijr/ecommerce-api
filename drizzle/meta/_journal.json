@@ -22,6 +22,27 @@
       "when": 1791149555800,
       "tag": "0002_medical_terror",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791498385845,
+      "tag": "0003_hesitant_sasquatch",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792188089479,
+      "tag": "0004_curvy_mentor",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792702464380,
+      "tag": "0005_steep_ezekiel",
+      "breakpoints": true
     }
   ]
 }

@@ -16,6 +16,7 @@ import { Roles } from '../common/decorators/roles.decorators';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { CreateProductVariantDto } from './dto/create-product-variant.dto';
 
 
 @Controller('products')
@@ -34,6 +35,30 @@ export class ProductsController {
             dto.price,
         );
     }
+
+    
+    @Post(':id/variants')
+    @Roles('ADMIN')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    async createProductVariant(
+        @Param('id', ParseIntPipe) id: number,
+        @Body() dto: CreateProductVariantDto,
+    ) {
+        return this.productsService.createProductVariant(
+            id,
+            dto,
+        );
+    }
+
+    
+    @Get(':id/variants')
+    async findProductVariants(
+        @Param('id', ParseIntPipe) id: number,
+    ) {
+        return this.productsService.findProductVariants(id);
+    }
+
+
 
     @Get()
     async findAll() {

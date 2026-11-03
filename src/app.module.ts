@@ -6,6 +6,7 @@ import { ProductsModule } from './products/products.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { CartModule } from './cart/cart.module';
+import { OrdersModule } from './orders/orders.module';
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
 
@@ -33,6 +34,8 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
   AuthModule,
 
   CartModule,
+
+  OrdersModule,
 ],
   
 })

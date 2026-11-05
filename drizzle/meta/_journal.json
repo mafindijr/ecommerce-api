@@ -43,6 +43,13 @@
       "when": 1792702464380,
       "tag": "0005_steep_ezekiel",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1793660298891,
+      "tag": "0006_married_doomsday",
+      "breakpoints": true
     }
   ]
 }

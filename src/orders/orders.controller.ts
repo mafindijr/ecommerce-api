@@ -1,4 +1,4 @@
-import { Controller, Post, Get, UseGuards, Req } from '@nestjs/common';
+import { Controller, Post, Get, UseGuards, Req, Param, ParseIntPipe } from '@nestjs/common';
 import { OrdersService } from './orders.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
@@ -16,6 +16,18 @@ export class OrdersController {
   @UseGuards(JwtAuthGuard)
     getMyOrders(@Req() req: any) {
         return this.ordersService.getMyOrders(req.user.userId);
+  }
+
+  @Get()
+  @UseGuards(JwtAuthGuard)
+  getOrderById (
+    @Param('id', ParseIntPipe) id: number,
+    @Req() req: any,
+  ) {
+    return this.ordersService.getOrderById(
+        id,
+        req.user.userId,
+    );
   }
 
 }

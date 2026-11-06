@@ -2,7 +2,7 @@ import { BadRequestException, Inject, Injectable, NotFoundException } from '@nes
 import { DATABASE_CONNECTION } from '../db/database.module';
 import type { Database } from '../db/database.module';
 
-import { eq, desc } from 'drizzle-orm';
+import { eq, desc, and} from 'drizzle-orm';
 import {
   carts,
   cartItems,
@@ -114,12 +114,39 @@ export class OrdersService {
   }
 
   async getMyOrders(userId: number) {
-    
+
   return this.db
     .select()
     .from(orders)
     .where(eq(orders.userId, userId))
     .orderBy(desc(orders.createdAt));
+}
+
+async getOrderById(orderId: number, userId: number) {
+
+     const [order] = await this.db
+        .select()
+        .from(orders)
+        .where(
+        and(
+            eq(orders.id, orderId),
+            eq(orders.userId, userId),
+        ),
+     );
+
+     if (!order) {
+        throw new NotFoundException('Order not found');
+     }
+
+     const items = await this.db
+        .select()
+        .from(orderItems)
+        .where(eq(orderItems.orderId, orderId));
+
+     return {
+        order,
+        items,
+     };
 }
 
 }

@@ -134,6 +134,7 @@ async getOrderById(orderId: number, userId: number) {
         ),
      );
 
+
      if (!order) {
         throw new NotFoundException('Order not found');
      }
@@ -142,6 +143,7 @@ async getOrderById(orderId: number, userId: number) {
         .select()
         .from(orderItems)
         .where(eq(orderItems.orderId, orderId));
+
 
      return {
         order,

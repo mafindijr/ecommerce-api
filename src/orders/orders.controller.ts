@@ -18,12 +18,13 @@ export class OrdersController {
         return this.ordersService.getMyOrders(req.user.userId);
   }
 
-  @Get()
+  @Get(':id')
   @UseGuards(JwtAuthGuard)
   getOrderById (
     @Param('id', ParseIntPipe) id: number,
     @Req() req: any,
   ) {
+
     return this.ordersService.getOrderById(
         id,
         req.user.userId,

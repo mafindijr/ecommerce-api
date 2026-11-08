@@ -182,7 +182,7 @@ async updateOrderStatus(
     if(
         !allowedTransitions[order.status].includes(status)
     ) {
-        throw new BadRequestException('Cannot change order status from ${order.status} to ${status}',);
+        throw new BadRequestException(`Cannot change order status from ${order.status} to ${status}`);
 
     }
 

@@ -3,6 +3,7 @@ import { DATABASE_CONNECTION } from '../db/database.module';
 import type { Database } from '../db/database.module';
 
 import { eq, desc, and} from 'drizzle-orm';
+import { OrderStatus } from './types/order-status.types';
 import {
   carts,
   cartItems,
@@ -11,6 +12,7 @@ import {
   orders,
   orderItems,
 } from '../db/schema';
+import { UpdateOrdersStatusDto } from './dto/update-order-status.dto';
 
 @Injectable()
 export class OrdersService {
@@ -149,6 +151,54 @@ async getOrderById(orderId: number, userId: number) {
         order,
         items,
      };
+}
+
+async updateOrderStatus(
+    orderId: number,
+    status:
+    UpdateOrdersStatusDto['status'],
+) {
+    //find order to update
+
+    const [order] = await this.db
+        .select()
+        .from(orders)
+        .where(eq(orders.id, orderId));
+
+    if(!order) {
+        throw new NotFoundException('Order not found'); 
+    }
+
+
+        //Create status transition
+    const allowedTransitions: Record<OrderStatus, OrderStatus[]> = {
+        PENDING: ['CONFIRMED', 'CANCELLED'],
+        CONFIRMED: ['SHIPPED', 'CANCELLED'],
+        SHIPPED: ['DELIVERED'],
+        DELIVERED: [],
+        CANCELLED: [],
+    };
+
+    if(
+        !allowedTransitions[order.status].includes(status)
+    ) {
+        throw new BadRequestException('Cannot change order status from ${order.status} to ${status}',);
+
+    }
+
+    const [updateOrer] = await this.db
+        .update(orders)
+        .set({
+            status,
+            updatedAt: new Date(),
+        })
+        .where(eq(orders.id, orderId))
+        .returning();
+
+    return {
+        message: 'Order status updated successfully',
+        order: updateOrer,
+    };
 }
 
 }

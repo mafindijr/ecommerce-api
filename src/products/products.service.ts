@@ -131,5 +131,23 @@ export class ProductsService {
         };
     }
 
+    async updateVariantStock(variantId: number, stock: number) {
+
+        const [variant] = await this.db
+            .update(productVariants)
+            .set({ stock })
+            .where(eq(productVariants.id, variantId))
+            .returning();
+
+        if (!variant) {
+            throw new NotFoundException('Product not found');
+        }
+
+        return {
+            message: 'Variant stock updated successfully',
+            variant,
+        }
+    }
+
     
 }

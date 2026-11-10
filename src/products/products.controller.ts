@@ -16,6 +16,7 @@ import { Roles } from '../common/decorators/roles.decorators';
 import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
+import { UpdateVariantStockDto } from './dto/update-variant-stock.dto';
 import { CreateProductVariantDto } from './dto/create-product-variant.dto';
 
 
@@ -86,6 +87,19 @@ export class ProductsController {
         @Param("id", ParseIntPipe) id: number
     ) {
         return this.productsService.deleteProduct(id);
+    }
+
+    @Patch('variants/:id/stock')
+    @UseGuards(JwtAuthGuard, RolesGuard)
+    @Roles('ADMIN')
+    updateVariantStock(
+        @Param('id', ParseIntPipe) id: number,
+        @Body() dto: UpdateVariantStockDto,
+    ) {
+        return this.productsService.updateVariantStock (
+            id,
+            dto.stock,
+        );
     }
 
 }

@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
 import { DATABASE_CONNECTION } from '../db/database.module';
 import type { Database } from '../db/database.module';
 import { and, eq } from 'drizzle-orm';
@@ -36,18 +36,6 @@ export class CartService {
 
         //find or create the authenticated user's cart
         const cart = await this.getOrCreateCart(userId); // we need to wait for the cart to return
-         
-
-        // // check whether products exists
-
-        //  const [product] = await this.db
-        //             .select()
-        //             .from(products)
-        //             .where(eq(products.id, dto.variantId));
-        
-        // if(!product) {
-        //     throw new NotFoundException('Product not found');
-        // }
 
         // check whether products varianr exists
         const [variant] = await this.db
@@ -71,13 +59,32 @@ export class CartService {
                 ),
             );
 
+        const requestedQuantity = (existingItem?.quantity ?? 0) + dto.quantity;
+
+        if (requestedQuantity > variant.stock) {
+            throw new BadRequestException(
+                `Insuffient stock. Only ${variant.stock} units available.`,
+            );
+        }
+
         // if it exists, increase the quantity
 
+        // if (existingItem) {
+        //     const [updatedItem] = await this.db
+        //         .update(cartItems)
+        //         .set({
+        //             quantity: existingItem.quantity + dto.quantity,
+        //         })
+        //         .where(eq(cartItems.id, existingItem.id))
+        //         .returning();
+
+        //         return updatedItem;
+        // }
         if (existingItem) {
             const [updatedItem] = await this.db
                 .update(cartItems)
                 .set({
-                    quantity: existingItem.quantity + dto.quantity,
+                    quantity: requestedQuantity,
                 })
                 .where(eq(cartItems.id, existingItem.id))
                 .returning();

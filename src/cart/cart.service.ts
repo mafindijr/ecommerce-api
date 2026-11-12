@@ -67,19 +67,6 @@ export class CartService {
             );
         }
 
-        // if it exists, increase the quantity
-
-        // if (existingItem) {
-        //     const [updatedItem] = await this.db
-        //         .update(cartItems)
-        //         .set({
-        //             quantity: existingItem.quantity + dto.quantity,
-        //         })
-        //         .where(eq(cartItems.id, existingItem.id))
-        //         .returning();
-
-        //         return updatedItem;
-        // }
         if (existingItem) {
             const [updatedItem] = await this.db
                 .update(cartItems)
@@ -118,7 +105,7 @@ export class CartService {
         const items = await this.db
             .select({
                 id: cartItems.id,
-                varientId: productVariants.id,
+                variantId: productVariants.id,
                 productId: products.id,
                 name: products.name,
                 color: productVariants.color,
@@ -134,7 +121,7 @@ export class CartService {
             )
             .innerJoin(
                 products,
-                eq(productVariants.id, products.id)
+                eq(productVariants.productId, products.id)
             )
             .where(eq(cartItems.cartId, cart.id));
 
@@ -161,38 +148,57 @@ export class CartService {
 
     }
 
+
     async updateItem(
         userId: number,
         itemId: number,
         dto: UpdateCartItemDto
     ) {
-        // finding auth user
-
         const cart = await this.getOrCreateCart(userId);
 
-        // updating only an item belonging to that cart
+        // Find the cart item and its associated variant
+        const [existingItem] = await this.db
+            .select({
+                id: cartItems.id,
+                variantId: cartItems.variantId,
+                quantity: cartItems.quantity,
+                stock: productVariants.stock,
+            })
+            .from(cartItems)
+            .innerJoin(
+                productVariants,
+                eq(cartItems.variantId, productVariants.id),
+            )
+            .where(
+                and(
+                    eq(cartItems.id, itemId),
+                    eq(cartItems.cartId, cart.id),
+                ),
+            );
 
+        if (!existingItem) {
+            throw new NotFoundException('Cart item not found');
+        }
+
+        // Check available stock
+        if (dto.quantity > existingItem.stock) {
+            throw new BadRequestException(
+                `Insufficient stock. Only ${existingItem.stock} units available.`,
+            );
+        }
+
+        // Update cart item quantity
         const [updatedItem] = await this.db
             .update(cartItems)
             .set({
-                quantity: dto.quantity
+                quantity: dto.quantity,
             })
-            .where(
-                and (
-                        eq(cartItems.id, itemId),
-                        eq(cartItems.cartId, cart.id)
-                    )
-            )
+            .where(eq(cartItems.id, itemId))
             .returning();
-
-            // if no items was updated, it doesnt belong to this cart
-
-            if (!updatedItem) {
-                throw new NotFoundException('Cart item not found');
-            }
 
         return updatedItem;
     }
+
 
     async removeItem (userId: number, itemId: number) {
 

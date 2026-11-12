@@ -49,6 +49,7 @@ export class OrdersService {
                   size: productVariants.size,
                   unitPrice: products.price,
                   quantity: cartItems.quantity,
+                  stock: productVariants.stock,
               })
               .from (cartItems)
               .innerJoin (
@@ -64,6 +65,14 @@ export class OrdersService {
           if(items.length === 0) {
               throw new BadRequestException('Your cart is empty');
           }
+
+          for (const item of items) {
+            if (item.quantity > item.stock) {
+                throw new BadRequestException(
+                `Insufficient stock for ${item.productName}. Only ${item.stock} units available.`,
+                );
+            }
+            }
       
           // Then calculate the order total
       

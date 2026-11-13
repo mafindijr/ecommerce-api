@@ -18,6 +18,8 @@ export const productVariants = pgTable(
             sku: varchar({ length: 100 }).notNull().unique(),
 
             stock: integer().notNull().default(0),
+
+            reservedStock: integer().notNull().default(0),
     },
     (table) => [
         unique('product_variants_product_color_size_unique').on(

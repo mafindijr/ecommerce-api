@@ -1,7 +1,7 @@
-import { integer, pgTable, varchar, unique } from 'drizzle-orm/pg-core';
+import { sql } from 'drizzle-orm';
+import { integer, pgTable, varchar, unique, check } from 'drizzle-orm/pg-core';
+
 import { products } from './products.schema';
-import { varbinary } from 'drizzle-orm/mysql-core';
-import { table } from 'console';
 
 export const productVariants = pgTable(
     'product_variants', {
@@ -26,6 +26,20 @@ export const productVariants = pgTable(
             table.productId,
             table.color,
             table.size,
+        ),
+         check(
+           'product_variants_reserved_stock_check',
+            sql`${table.reservedStock} <= ${table.stock}`,
+        ),
+
+        check(
+            'product_variants_stock_non_negative',
+             sql`${table.stock} >= 0`,
+        ),
+
+        check(
+         'product_variants_reserved_stock_non_negative',
+          sql`${table.reservedStock} >= 0`,
         ),
     ],
 )

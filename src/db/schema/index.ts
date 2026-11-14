@@ -8,3 +8,6 @@ export * from './cart-items.schema';
 
 export * from './orders.shema';
 export * from './order-items.shema';
+
+export * from './stock-reservations';
+export * from './reservations-items';

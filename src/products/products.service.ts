@@ -55,6 +55,13 @@ export class ProductsService {
     }
 
 
+    async findAllVariants() { // will be remove
+         return this.db
+            .select()
+            .from(productVariants);
+    }
+
+
     
     async findProductVariants(productId: number) {
         // First, check whether the product exists

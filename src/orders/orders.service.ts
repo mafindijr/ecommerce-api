@@ -1,4 +1,5 @@
 import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { StockReservationsService } from '../stock-reservations/stock-reservations.service';
 import { DATABASE_CONNECTION } from '../db/database.module';
 import type { Database } from '../db/database.module';
 
@@ -20,6 +21,8 @@ export class OrdersService {
   constructor(
     @Inject(DATABASE_CONNECTION)
     private readonly db: Database,
+
+    private readonly stockReservationsService: StockReservationsService,
   ) {}
 
   async createOrder (userId: number) {
@@ -27,7 +30,8 @@ export class OrdersService {
       
       return await this.db.transaction(async (tx) => {
 
-          //Find the custmer's cart
+          //Find and lock the custmer's cart
+
           const [cart] = await tx
               .select()
               .from(carts)
@@ -49,7 +53,7 @@ export class OrdersService {
                   size: productVariants.size,
                   unitPrice: products.price,
                   quantity: cartItems.quantity,
-                  stock: productVariants.stock,
+                  
               })
               .from (cartItems)
               .innerJoin (
@@ -65,14 +69,6 @@ export class OrdersService {
           if(items.length === 0) {
               throw new BadRequestException('Your cart is empty');
           }
-
-          for (const item of items) {
-            if (item.quantity > item.stock) {
-                throw new BadRequestException(
-                `Insufficient stock for ${item.productName}. Only ${item.stock} units available.`,
-                );
-            }
-            }
       
           // Then calculate the order total
       
@@ -89,6 +85,16 @@ export class OrdersService {
                 total,
             })
             .returning();
+
+        const reservation = await this.stockReservationsService.reserveForOrder(
+            tx,
+            order.id,
+            items.map((item) => ({
+                variantId: item.variantId,
+                quantity: item.quantity,
+            })),
+        );
+
         
         // Now save the cart items as order items
         
@@ -119,6 +125,7 @@ export class OrdersService {
             message: 'Order created successfully',
             order,
             items,
+            reservation,
         };
     });
 

@@ -1,7 +1,8 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException,
+ } from '@nestjs/common';
 import type { ExtractTablesWithRelations } from 'drizzle-orm';
 import type { NodePgTransaction } from 'drizzle-orm/node-postgres';
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, sql,  lte, } from 'drizzle-orm';
 import type * as schema from '../db/schema';
 
 import {
@@ -17,6 +18,7 @@ type DbTransaction = NodePgTransaction<
 
 @Injectable()
 export class StockReservationsService {
+
   // Reserve stock for one product variant.
   async reserveVariantStock(
     tx: DbTransaction,
@@ -128,4 +130,108 @@ export class StockReservationsService {
       items: reservationItems,
     };
   }
+
+
+   // Expire one reservation and release its reserved stock.
+   
+async expireReservation(
+  tx: DbTransaction,
+  reservationId: number,
+) {
+  // 1. Lock the reservation row.
+  const [reservation] = await tx
+    .select()
+    .from(stockReservations)
+    .where(eq(stockReservations.id, reservationId))
+    .for('update');
+
+  if (!reservation) {
+    throw new BadRequestException('Reservation not found');
+  }
+
+  // 2. Check reservation status.
+  if (reservation.status !== 'ACTIVE') {
+    return {
+      expired: false,
+      message: `Reservation cannot expire because its current status is ${reservation.status}`,
+    };
+  }
+
+  // 3. Atomically expire only if PostgreSQL considers it expired.
+  const [expiredReservation] = await tx
+    .update(stockReservations)
+    .set({
+      status: 'EXPIRED',
+      updatedAt: sql`NOW()`,
+    })
+    .where(
+      and(
+        eq(stockReservations.id, reservationId),
+        eq(stockReservations.status, 'ACTIVE'),
+        sql`${stockReservations.expiresAt} <= NOW()`,
+      ),
+    )
+    .returning({
+      id: stockReservations.id,
+    });
+
+  if (!expiredReservation) {
+    return {
+      expired: false,
+      message: 'Reservation has not expired yet',
+    };
+  }
+
+  // 4. Retrieve reservation items.
+  const items = await tx
+    .select({
+      variantId: stockReservationItems.variantId,
+      quantity: stockReservationItems.quantity,
+    })
+    .from(stockReservationItems)
+    .where(
+      eq(stockReservationItems.reservationId, reservationId),
+    )
+    .orderBy(stockReservationItems.variantId);
+
+  if (items.length === 0) {
+    throw new InternalServerErrorException(
+      'Reservation has no items to release',
+    );
+  }
+
+  // 5. Release reserved stock.
+  for (const item of items) {
+    const [updatedVariant] = await tx
+      .update(productVariants)
+      .set({
+        reservedStock: sql`
+          ${productVariants.reservedStock} - ${item.quantity}
+        `,
+      })
+      .where(
+        and(
+          eq(productVariants.id, item.variantId),
+          sql`${productVariants.reservedStock} >= ${item.quantity}`,
+        ),
+      )
+      .returning({
+        id: productVariants.id,
+      });
+
+    if (!updatedVariant) {
+      throw new InternalServerErrorException(
+        `Unable to release reserved stock for variant ${item.variantId}`,
+      );
+    }
+  }
+
+  // 6. Return after all items have been released.
+  return {
+    expired: true,
+    reservationId,
+    releasedItems: items,
+  };
+}
+
 }

@@ -138,6 +138,7 @@ async expireReservation(
   tx: DbTransaction,
   reservationId: number,
 ) {
+  
   // 1. Lock the reservation row.
   const [reservation] = await tx
     .select()

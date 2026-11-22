@@ -7,6 +7,7 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { CartModule } from './cart/cart.module';
 import { OrdersModule } from './orders/orders.module';
+import { ScheduleModule } from '@nestjs/schedule';
 import { StockReservationsModule } from './stock-reservations/stock-reservations.module';
 
 export const { ObserveModule, ObserveInstrument } = createObserveModule();
@@ -25,6 +26,8 @@ export const { ObserveModule, ObserveInstrument } = createObserveModule();
       isGlobal: true,
       envFilePath: '.env', 
     }),
+    
+  ScheduleModule.forRoot(),
   
   DatabaseModule,
 
